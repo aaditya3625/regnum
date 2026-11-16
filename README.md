@@ -2,7 +2,7 @@
 
 A daily history game. You get the years of a monarch's reign and a map of their realm as it stood when the reign ended. Name the ruler in three guesses.
 
-**Play:** https://mridlll.github.io/regnum/
+**Play:** https://aaditya3625.github.io/regnum/
 
 ## How it plays
 - The map shades the ruler's territory. The corner shows the reign, from accession (purple) to end (gold).
