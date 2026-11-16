@@ -1,0 +1,5 @@
+build/historical-basemaps/
+build/node_modules/
+build/land-50m.geojson
+build/puzzles2.json
+build/__pycache__/
