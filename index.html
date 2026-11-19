@@ -206,7 +206,8 @@ const HINTS = [
 ];
 
 const $ = id => document.getElementById(id);
-const yr = (y, forceAD) => y < 0 ? `${-y} BC` : (forceAD ? `AD ${y}` : `${y}`);
+const yr = y => y < 0 ? `${-y} BCE` : `${y} CE`;
+const yrRange = (s, e) => s < 0 && e < 0 ? `${-s}–${-e} BCE` : s < 0 ? `${-s} BCE–${e} CE` : `${s}–${e} CE`;
 const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 function store(k, v){ try{ if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); }catch(e){ return null; } }
 function rng(seed){ return () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
@@ -233,8 +234,8 @@ function load(idx, isDaily){
   $('gLand').innerHTML = `<g transform="${M}"><path class="land" d="${LAND}"/>${wrapped ? `<path class="land" transform="translate(360 0)" d="${LAND}"/>` : ''}<path class="brd" d="${cur.brd}"/></g>`;
   $('gRealm').innerHTML = `<g transform="${M}"><path class="realm" d="${cur.emp}"/></g>`;
   $('gGuess').setAttribute('transform', M);
-  $('reign').innerHTML = `<span class="b">${yr(cur.s)}</span><span class="sep">→</span><span class="d">${yr(cur.e, cur.s < 0)}</span>`;
-  $('legend').innerHTML = `<span style="color:var(--start);font-weight:700">▮ territory</span><span>borders c. ${cur.snap.startsWith('bc') ? cur.snap.slice(2) + ' BC' : cur.snap}</span>`;
+  $('reign').innerHTML = `<span class="b">${yr(cur.s)}</span><span class="sep">→</span><span class="d">${yr(cur.e)}</span>`;
+  $('legend').innerHTML = `<span style="color:var(--start);font-weight:700">▮ territory</span><span>borders c. ${cur.snap.startsWith('bc') ? cur.snap.slice(2) + ' BCE' : cur.snap + ' CE'}</span>`;
   view = st.done ? 'world' : 'realm';
   setView(false);
   $('guessInput').value = ''; closeAc();
@@ -273,7 +274,7 @@ function drawMarks(){
     const [x, y] = project(g.cap[0], g.cap[1]);
     const cl = dynOpen && isClose(g, cur) ? ' close' : '';
     return `<circle class="ring${cl}" cx="${x}" cy="${y}" r="${9 * u}"/><text class="ringnum${cl}" x="${x}" y="${y}" font-size="${11 * u}">${i + 1}</text>`
-      + `<text class="glbl" x="${x + 13 * u}" y="${y}" font-size="${12 * u}" style="stroke-width:${3 * u}px">${g.name} <tspan class="gy">${yr(g.s)}–${yr(g.e, g.s < 0)}</tspan></text>`;
+      + `<text class="glbl" x="${x + 13 * u}" y="${y}" font-size="${12 * u}" style="stroke-width:${3 * u}px">${g.name} <tspan class="gy">${yrRange(g.s, g.e)}</tspan></text>`;
   }).join('');
   $('gRings').innerHTML = rings;
   $('gCap').innerHTML = (st.done || st.h.includes('cap')) ? `<circle class="cap" cx="${cur.pin[0]}" cy="${cur.pin[1]}" r="${5 * u}"/>` : '';
@@ -292,7 +293,7 @@ function render(){
   // guesses
   $('guesses').innerHTML = st.g.map((n, i) => {
     const g = byName(n), ok = g === cur;
-    const yrs = `<span class="yrs">${yr(g.s)}–${yr(g.e, g.s < 0)}</span>`;
+    const yrs = `<span class="yrs">${yrRange(g.s, g.e)}</span>`;
     if (ok) return `<div class="g"><span class="num">${i + 1}</span><span class="ok">✓</span><span>${n}</span>${yrs}</div>`;
     const overlap = g.s <= cur.e && cur.s <= g.e, dy = cur.s - g.s, d = km(g.cap, cur.cap);
     const t = overlap ? `⏳ <b>overlap</b>` : `⏳ <b>${Math.abs(dy)}</b> yrs ${dy > 0 ? 'later' : 'earlier'}`;
@@ -323,7 +324,7 @@ function render(){
     const nh = st.h.filter(k => HINTS.some(h => h.k === k)).length;
     R.innerHTML = `<h2>${st.won ? (st.g.length === 1 ? 'First try! 👑' : 'Got it! 👑') : 'Out of guesses'}</h2>
       <div class="desc">It was <b>${cur.name}</b> · ${cur.dyn} dynasty · ruled from ${cur.capName}</div>
-      <div class="yrsline">Reign <span class="b">${yr(cur.s)}</span> → <span class="d">${yr(cur.e, cur.s < 0)}</span> · ${st.won ? st.g.length : 'X'}/${MAXG} · 💡 ${nh} hint${nh === 1 ? '' : 's'}</div>
+      <div class="yrsline">Reign <span class="b">${yr(cur.s)}</span> → <span class="d">${yr(cur.e)}</span> · ${st.won ? st.g.length : 'X'}/${MAXG} · 💡 ${nh} hint${nh === 1 ? '' : 's'}</div>
       <div class="shareline"><button class="primary" id="shareBtn">Copy result 📋</button><button id="moreBtn">🎲 Play a practice round</button>${daily ? '<span class="nextat">New monarch tomorrow</span>' : ''}</div>
       <pre class="sharetxt" id="shareTxt"></pre>`;
     $('shareBtn').onclick = share;
