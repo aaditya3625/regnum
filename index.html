@@ -76,10 +76,10 @@ svg#map{display:block;width:100%;height:clamp(260px,52vw,440px)}
 .chip.y{background:#c99a1c}
 .hintlabel{margin-top:14px;font-size:13px;font-weight:700}
 .hintlabel .hintsub{font-weight:400;color:var(--muted)}
-.hintbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.hintbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
 .hintbar button{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13.5px;font-weight:600;padding:10px 12px;border-radius:10px;border:1px dashed #aaa;background:#f7f7f5;text-align:left}
 .hintbar button:hover{border-color:var(--ink);background:#efefeb}
-.hintbar button.revealed{opacity:1;color:var(--ink);border:1px solid var(--line);background:#f7f7f5;font-weight:400;cursor:default}
+.hintbar button.revealed{grid-column:1/-1;opacity:1;color:var(--ink);border:1px solid var(--line);background:#f7f7f5;font-weight:400;cursor:default}
 .hintbar button.revealed b{margin-right:6px}
 .result{margin-top:12px;padding:14px 16px;border-radius:10px;display:none}
 .result.show{display:block;animation:resultIn .55s cubic-bezier(.2,.8,.3,1.1)}
@@ -185,7 +185,7 @@ footer a{color:var(--muted)}
   <div class="howbody">
     <p>The shaded area is a kingdom or empire as it stood when one ruler's reign ended. The two years in the corner are when that reign began and ended. Your job is to name the ruler. You get three guesses.</p>
     <p>If you guess wrong, you'll see how many years apart the two reigns were. Your guess also appears on the map, with its own territory outlined and its capital marked, so you can see how close you were.</p>
-    <p>Stuck? There are four hints: the first letter of the name, a bit of trivia, the capital and the dynasty. Opening the capital also tells you how far, and in which direction, each of your guesses was from the right capital. Opening the dynasty tells you whether any of your guesses belonged to the same one. Hints don't cost you anything, but your shared result shows how many you used.</p>
+    <p>Stuck? There are three hints: a bit of trivia, the capital and the dynasty. Opening the capital also tells you how far, and in which direction, each of your guesses was from the right capital. Opening the dynasty tells you whether any of your guesses belonged to the same one. Hints don't cost you anything, but your shared result shows how many you used.</p>
     <p>Use Close-up and World to zoom in and out. There's a new ruler every day, and Practice gives you as many extra rounds as you like.</p>
     <h3>Sources</h3>
     <p>Historical borders come from <a href="https://github.com/aourednik/historical-basemaps">historical-basemaps</a> by André Ourednik and contributors (GPL-3.0). Each map uses the snapshot closest to the end of the reign, so treat the borders as approximate. Coastlines are from <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain), via <a href="https://github.com/topojson/world-atlas">world-atlas</a>. Some reign dates are disputed by historians, so a few are approximate. The game was inspired by <a href="https://lifelines.day">Lifelines</a>, and it isn't affiliated with it.</p>
@@ -200,7 +200,6 @@ const MAXG = 3;
 const GAME_URL = /github\.io$/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, '') : 'https://aaditya3625.github.io/regnum/';
 const EPOCH = Date.UTC(2026, 10, 16);
 const HINTS = [
-  { k: 'letter', label: '🔤 First letter', val: p => p.name[0] },
   { k: 'tri',    label: '📜 Trivia',       val: p => p.tri },
   { k: 'cap',    label: '📍 Capital',      val: p => p.capName },
   { k: 'dyn',    label: '👑 Dynasty',      val: p => p.dyn },
@@ -321,7 +320,7 @@ function render(){
   const R = $('result');
   if (st.done){
     R.className = 'result show ' + (st.won ? 'win' : 'lose');
-    const nh = st.h.length;
+    const nh = st.h.filter(k => HINTS.some(h => h.k === k)).length;
     R.innerHTML = `<h2>${st.won ? (st.g.length === 1 ? 'First try! 👑' : 'Got it! 👑') : 'Out of guesses'}</h2>
       <div class="desc">It was <b>${cur.name}</b> · ${cur.dyn} dynasty · ruled from ${cur.capName}</div>
       <div class="yrsline">Reign <span class="b">${yr(cur.s)}</span> → <span class="d">${yr(cur.e, cur.s < 0)}</span> · ${st.won ? st.g.length : 'X'}/${MAXG} · 💡 ${nh} hint${nh === 1 ? '' : 's'}</div>
@@ -340,7 +339,7 @@ function render(){
 function squares(){ return st.g.map(n => { const g = byName(n); return g === cur ? '🟩' : isClose(g, cur) ? '🟨' : '⬛'; }).join(''); }
 async function share(){
   const head = daily ? `Regnum #${dayNum + 1}` : 'Regnum (practice)';
-  const nh = st.h.length;
+  const nh = st.h.filter(k => HINTS.some(h => h.k === k)).length;
   const txt = `${head} · ${st.won ? st.g.length : 'X'}/${MAXG}\n${squares()}${nh ? `\n💡 ${nh} hint${nh === 1 ? '' : 's'}` : ''}\n${GAME_URL}`;
   try { await navigator.clipboard.writeText(txt); toast('Copied to clipboard'); }
   catch(e){ $('shareTxt').textContent = txt; $('shareTxt').style.display = 'block'; }
